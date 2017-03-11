@@ -59,7 +59,8 @@ func createtablestring(table string, collate string, engine string, dbr *dbf.Rea
 			fieldtype = fmt.Sprintf("VARCHAR(%d)", dbfld.Len)
 		case 'N': //Numeric could be either Int or fixed point decimal
 			if dbfld.DecimalPlaces > 0 {
-				fieldtype = fmt.Sprintf("DECIMAL(%d,%d)", dbfld.Len, dbfld.DecimalPlaces)
+				//a VARCHAR will do it, +2 it's for sign and decimal sep.
+				fieldtype = fmt.Sprintf("VARCHAR(%d)", dbfld.Len+2)
 			} else {
 				fieldtype = fmt.Sprintf("INT(%d)", dbfld.Len)
 			}
@@ -116,6 +117,9 @@ func main() {
 	dbfile.SetFlags(dbf.FlagDateAssql | dbf.FlagSkipWeird | dbf.FlagSkipDeleted)
 
 	if createtable {
+		if verbose {
+			fmt.Println("Creating Table: ", argl[2])
+		}
 		_, erc := db.Exec(createtablestring(argl[2], collate, engine, dbfile))
 		if erc != nil {
 			log.Fatal("CREATE TABLE:", erc)
