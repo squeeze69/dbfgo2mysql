@@ -21,6 +21,11 @@ var mysqlurl string
 var verbose bool
 var maxrecord int
 var truncate bool
+var createtable bool
+
+//global variables for --create
+var collate = "utf8_general_ci"
+var engine = "MyIsam"
 
 //read profile, actually a fixed position file, first row it's a sql url
 func readprofile(prfname string) error {
@@ -38,6 +43,36 @@ func readprofile(prfname string) error {
 	return nil
 }
 
+//returns a "CREATE TABLE" string
+func createtablestring(table string, collate string, engine string, dbr *dbf.Reader) string {
+	var fieldtype string
+	arf := make([]string, 0, 200)
+	fields := dbr.FieldNames()
+	for k := range fields {
+		dbfld, _ := dbr.FieldInfo(k)
+		switch dbfld.Type {
+		case 'D':
+			fieldtype = "DATE"
+		case 'L': //logical
+			fieldtype = "CHAR(1)"
+		case 'C': //CHAR
+			fieldtype = fmt.Sprintf("VARCHAR(%d)", dbfld.Len)
+		case 'N': //Numeric could be either Int or fixed point decimal
+			if dbfld.DecimalPlaces > 0 {
+				fieldtype = fmt.Sprintf("DECIMAL(%d,%d)", dbfld.Len, dbfld.DecimalPlaces)
+			} else {
+				fieldtype = fmt.Sprintf("INT(%d)", dbfld.Len)
+			}
+		default:
+			fieldtype = "VARCHAR(254)"
+		}
+
+		arf = append(arf, fmt.Sprintf("`%s` %s", dbf.Tillzero(dbfld.Name[:]), fieldtype))
+	}
+	return fmt.Sprintf("CREATE TABLE IF NOT EXISTS `%s` (\n%s\n)\nCOLLATE='%s' ENGINE = %s;",
+		table, strings.Join(arf, ",\n"), collate, engine)
+}
+
 func main() {
 	var rec dbf.OrderedRecord
 	var qstring string
@@ -49,6 +84,9 @@ func main() {
 	flag.BoolVar(&verbose, "v", false, "verbose output")
 	flag.BoolVar(&truncate, "truncate", false, "truncate table before writing")
 	flag.IntVar(&maxrecord, "m", -1, "maximum number of records to read")
+	flag.StringVar(&collate, "collate", "utf8_general_ci", "Collate to use with CREATE TABLE")
+	flag.StringVar(&engine, "engine", "MyIsam", "Engine to use with CREATE TABLE")
+	flag.BoolVar(&createtable, "create", false, "Switch to force TABLE CREATION")
 	flag.Parse()
 
 	argl := flag.Args()
@@ -76,6 +114,14 @@ func main() {
 		log.Fatal("dbf newreader:", err)
 	}
 	dbfile.SetFlags(dbf.FlagDateAssql | dbf.FlagSkipWeird | dbf.FlagSkipDeleted)
+
+	if createtable {
+		_, erc := db.Exec(createtablestring(argl[2], collate, engine, dbfile))
+		if erc != nil {
+			log.Fatal("CREATE TABLE:", erc)
+		}
+	}
+
 	fields := dbfile.FieldNames()
 	for i := 0; i < len(fields); i++ {
 		placeholder = append(placeholder, "?")
@@ -127,4 +173,5 @@ func main() {
 	runtime.ReadMemStats(&memst)
 	fmt.Printf("Records: Inserted: %d Skipped: %d\n", inserted, skipped)
 	fmt.Println("Allocato Totale (KiB): ", memst.TotalAlloc/1024)
+
 }
