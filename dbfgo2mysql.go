@@ -93,6 +93,7 @@ func main() {
 	argl := flag.Args()
 	if len(argl) < 3 {
 		fmt.Println("Usage: dbfgo2mysql [-v] [-m=maxrecords] [--truncate] profile dbffile table")
+		flag.PrintDefaults()
 		os.Exit(1)
 	}
 	err := readprofile(argl[0])
