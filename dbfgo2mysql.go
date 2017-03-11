@@ -41,9 +41,8 @@ func readprofile(prfname string) error {
 func main() {
 	var rec dbf.OrderedRecord
 	var qstring string
-	var placeholder []string
 	var skipped, inserted int
-	placeholder = make([]string, 0, 200) //preallocate
+	placeholder := make([]string, 0, 200) //preallocate
 
 	var memst runtime.MemStats
 
@@ -54,7 +53,7 @@ func main() {
 
 	argl := flag.Args()
 	if len(argl) < 3 {
-		fmt.Println("Usage: dbfgo2mysql [-v] [-m=maxrecords] profile dbffile table")
+		fmt.Println("Usage: dbfgo2mysql [-v] [-m=maxrecords] [--truncate] profile dbffile table")
 		os.Exit(1)
 	}
 	err := readprofile(argl[0])
