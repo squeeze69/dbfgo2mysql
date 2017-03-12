@@ -2,7 +2,8 @@ DBFGO2MYSQL - Squeeze69
 License: GPLv3
 BTW: Credits to "Squeeze69" would be appreciated if you use this code.
 
-NOTICE: USE THIS CODE AT YOUR OWN RISK, NO WARRANTIES! This could the end of universe, or, worst, some buraucratic nightmares.
+NOTICE: USE THIS CODE AT YOUR OWN RISK, NO WARRANTIES!
+This could cause the end of the universe, or, worst, some buraucratic nightmares.
 
 Use this at your own risk.
 
