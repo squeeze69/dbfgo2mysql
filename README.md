@@ -1,13 +1,18 @@
 DBFGO2MYSQL - Squeeze69
+
 License: GPLv3
+
 BTW: Credits to "Squeeze69" would be appreciated if you use this code.
 
 NOTICE: USE THIS CODE AT YOUR OWN RISK, NO WARRANTIES!
+
 This could cause the end of the universe, or, worst, some buraucratic nightmares.
 
 Use this at your own risk.
 
-Should be read: DBF, please, GO TO MYSQL!
+Build: go build dbfgo2mysql.go
+
+Should be read: DBF, please, GO TO MYSQL! (DBF GO 2 MYSQL)
 
 It's a simple tool to import dbf files into mysql/mariadb tables, optionally creating them.
 
