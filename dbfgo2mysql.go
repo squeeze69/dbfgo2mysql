@@ -24,7 +24,7 @@ const (
 //global mysqlurl - see the go lang database/sql package
 //sample nopwd url: "root:@(127.0.0.1:3306)/database"
 var mysqlurl string
-var verbose, truncate, createtable, insertignore bool
+var verbose, truncate, createtable, insertignore, nobigint bool
 var maxrecord int
 
 //global variables for --create
@@ -66,7 +66,7 @@ func createtablestring(table string, collate string, engine string, dbr *dbf.Rea
 				//a VARCHAR will do it, +2 it's for sign and decimal sep.
 				fieldtype = fmt.Sprintf("VARCHAR(%d)", dbfld.Len+2)
 			} else {
-				if dbfld.Len > 9 {
+				if dbfld.Len > 9 && !nobigint {
 					fieldtype = fmt.Sprintf("BIGINT(%d)", dbfld.Len)
 				} else {
 					fieldtype = fmt.Sprintf("INT(%d)", dbfld.Len)
@@ -94,6 +94,7 @@ func main() {
 	flag.BoolVar(&verbose, "v", false, "verbose output")
 	flag.BoolVar(&truncate, "truncate", false, "truncate table before writing")
 	flag.BoolVar(&insertignore, "insertignore", false, "use 'INSERT IGNORE' instead of INSERT")
+	flag.BoolVar(&nobigint, "nobigint", false, "DON'T use BIGINT type, sometimes fields are over-dimensioned")
 	flag.IntVar(&maxrecord, "m", -1, "maximum number of records to read")
 	flag.StringVar(&collate, "collate", "utf8_general_ci", "Collate to use with CREATE TABLE")
 	flag.StringVar(&engine, "engine", "MyIsam", "Engine to use with CREATE TABLE")
@@ -198,5 +199,4 @@ func main() {
 	runtime.ReadMemStats(&memst)
 	fmt.Printf("Records: Inserted: %d Skipped: %d\n", inserted, skipped)
 	fmt.Println("Total Allocated KiB: ", memst.TotalAlloc/1024)
-
 }
