@@ -15,17 +15,21 @@ import (
 	"github.com/squeeze69/dbf"
 )
 
+// default values and other constants
+const (
+	defaultEngine    = "MyIsam"
+	defaultCollation = "utf8_general_ci"
+)
+
 //global mysqlurl - see the go lang database/sql package
 //sample nopwd url: "root:@(127.0.0.1:3306)/database"
 var mysqlurl string
-var verbose bool
+var verbose, truncate, createtable, insertignore bool
 var maxrecord int
-var truncate bool
-var createtable bool
 
 //global variables for --create
-var collate = "utf8_general_ci"
-var engine = "MyIsam"
+var collate = defaultCollation
+var engine = defaultEngine
 
 //read profile, actually a fixed position file, first row it's a sql url
 func readprofile(prfname string) error {
@@ -62,7 +66,11 @@ func createtablestring(table string, collate string, engine string, dbr *dbf.Rea
 				//a VARCHAR will do it, +2 it's for sign and decimal sep.
 				fieldtype = fmt.Sprintf("VARCHAR(%d)", dbfld.Len+2)
 			} else {
-				fieldtype = fmt.Sprintf("INT(%d)", dbfld.Len)
+				if dbfld.Len > 9 {
+					fieldtype = fmt.Sprintf("BIGINT(%d)", dbfld.Len)
+				} else {
+					fieldtype = fmt.Sprintf("INT(%d)", dbfld.Len)
+				}
 			}
 		default:
 			fieldtype = "VARCHAR(254)"
@@ -78,21 +86,23 @@ func main() {
 	var rec dbf.OrderedRecord
 	var qstring string
 	var skipped, inserted int
+	var insertstatement = "INSERT"
 	placeholder := make([]string, 0, 200) //preallocate
 
 	var memst runtime.MemStats
 
 	flag.BoolVar(&verbose, "v", false, "verbose output")
 	flag.BoolVar(&truncate, "truncate", false, "truncate table before writing")
+	flag.BoolVar(&insertignore, "insertignore", false, "use 'INSERT IGNORE' instead of INSERT")
 	flag.IntVar(&maxrecord, "m", -1, "maximum number of records to read")
 	flag.StringVar(&collate, "collate", "utf8_general_ci", "Collate to use with CREATE TABLE")
 	flag.StringVar(&engine, "engine", "MyIsam", "Engine to use with CREATE TABLE")
-	flag.BoolVar(&createtable, "create", false, "Switch to force TABLE CREATION")
+	flag.BoolVar(&createtable, "create", false, "Switch to CREATE TABLE IF NOT EXISTS")
 	flag.Parse()
 
 	argl := flag.Args()
 	if len(argl) < 3 {
-		fmt.Println("Usage: dbfgo2mysql [-v] [-m=maxrecords] [--truncate] profile dbffile table")
+		fmt.Println("Usage: dbfgo2mysql [parameters] profile dbffile table")
 		flag.PrintDefaults()
 		os.Exit(1)
 	}
@@ -117,16 +127,22 @@ func main() {
 	}
 	dbfile.SetFlags(dbf.FlagDateAssql | dbf.FlagSkipWeird | dbf.FlagSkipDeleted)
 
+	//create table section
 	if createtable {
 		if verbose {
 			fmt.Println("Creating Table: ", argl[2])
 		}
-		_, erc := db.Exec(createtablestring(argl[2], collate, engine, dbfile))
+		ctstring := createtablestring(argl[2], collate, engine, dbfile)
+		_, erc := db.Exec(ctstring)
 		if erc != nil {
 			log.Fatal("CREATE TABLE:", erc)
 		}
+		if verbose {
+			fmt.Println("CREATE TABLE:\n", ctstring)
+		}
 	}
 
+	//retrieve fields to build the query
 	fields := dbfile.FieldNames()
 	for i := 0; i < len(fields); i++ {
 		placeholder = append(placeholder, "?")
@@ -137,7 +153,11 @@ func main() {
 			log.Fatal("Error truncating:", err)
 		}
 	}
-	qstring = fmt.Sprintf("INSERT INTO %s (`%s`) VALUES (%s);", argl[2], strings.Join(fields, "`,`"), strings.Join(placeholder, ","))
+
+	if insertignore {
+		insertstatement = "INSERT IGNORE"
+	}
+	qstring = fmt.Sprintf("%s INTO %s (`%s`) VALUES (%s);", insertstatement, argl[2], strings.Join(fields, "`,`"), strings.Join(placeholder, ","))
 	if verbose {
 		fmt.Println("QSTRING:", qstring)
 	}
@@ -177,6 +197,6 @@ func main() {
 	}
 	runtime.ReadMemStats(&memst)
 	fmt.Printf("Records: Inserted: %d Skipped: %d\n", inserted, skipped)
-	fmt.Println("Allocato Totale (KiB): ", memst.TotalAlloc/1024)
+	fmt.Println("Total Allocated KiB: ", memst.TotalAlloc/1024)
 
 }

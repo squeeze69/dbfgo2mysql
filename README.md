@@ -15,6 +15,10 @@ The flags, up to now, are:
 -engine=...[default: MyIsam]
 -collate=...[default: utf8_general_ci]
 
+-inserignore
+	The "INSERT IGNORE" statement is used instead of "INSERT ", meaning this, if there is duplicate primary key, the error
+	doesn't stop the import.
+
 -m=number of records to import, starting from the first.
 
 -verbose
