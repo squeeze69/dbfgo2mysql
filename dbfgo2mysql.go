@@ -1,4 +1,7 @@
 //conversion from dbf to mysql
+//version 0.1.0
+//written by squeeze69
+
 package main
 
 import (
@@ -24,7 +27,7 @@ const (
 //global mysqlurl - see the go lang database/sql package
 //sample nopwd url: "root:@(127.0.0.1:3306)/database"
 var mysqlurl string
-var verbose, truncate, createtable, insertignore, nobigint bool
+var verbose, truncate, createtable, insertignore, nobigint, droptable bool
 var maxrecord int
 
 //global variables for --create
@@ -93,6 +96,7 @@ func main() {
 
 	flag.BoolVar(&verbose, "v", false, "verbose output")
 	flag.BoolVar(&truncate, "truncate", false, "truncate table before writing")
+	flag.BoolVar(&droptable, "drop", false, "drop table before anything")
 	flag.BoolVar(&insertignore, "insertignore", false, "use 'INSERT IGNORE' instead of INSERT")
 	flag.BoolVar(&nobigint, "nobigint", false, "DON'T use BIGINT type, sometimes fields are over-dimensioned")
 	flag.IntVar(&maxrecord, "m", -1, "maximum number of records to read")
@@ -128,6 +132,15 @@ func main() {
 	}
 	dbfile.SetFlags(dbf.FlagDateAssql | dbf.FlagSkipWeird | dbf.FlagSkipDeleted)
 
+	if droptable {
+		if verbose {
+			fmt.Println("Dropping table:", argl[2])
+		}
+		_, erd := db.Exec(fmt.Sprintf("DROP TABLE `%s`;", argl[2]))
+		if erd != nil {
+			log.Fatal("Dropping:", erd)
+		}
+	}
 	//create table section
 	if createtable {
 		if verbose {
@@ -148,7 +161,7 @@ func main() {
 	for i := 0; i < len(fields); i++ {
 		placeholder = append(placeholder, "?")
 	}
-	if truncate {
+	if truncate && !droptable {
 		_, err = db.Exec(fmt.Sprintf("TRUNCATE `%s`;", argl[2]))
 		if err != nil {
 			log.Fatal("Error truncating:", err)

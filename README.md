@@ -18,6 +18,7 @@ user:password@(127.0.0.1:3307)/database
 
 see here ( https://github.com/go-sql-driver/mysql/#dsn-data-source-name ).
 
+Of Course: The user MUST have grants to perform actions.
 
 The flags, up to now, are:
 -truncate
@@ -35,6 +36,7 @@ The flags, up to now, are:
 
 -m=number of records to import, starting from the first.
 
+-drop drop table before every action (create,truncate, insert).
 
 -verbose
 	verbose output
