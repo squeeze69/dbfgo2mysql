@@ -1,5 +1,6 @@
 DBFGO2MYSQL - Squeeze69
 License: GPLv3
+BTW: Credits to "Squeeze69" would be appreciated if you use this code.
 
 Use this at your own risk.
 
@@ -25,6 +26,7 @@ The flags, up to now, are:
 	truncate table before writing
 -create
 	create table - actually, some guesswork goes on to build the "create table ..." statement.
+	The "int" types are reduced to their bare minumum for storage (i.e.: 1 digit = TINYINT,etc..)
 -engine=...[default: MyIsam]
 -collate=...[default: utf8_general_ci]
 -nobigint

@@ -69,11 +69,20 @@ func createtablestring(table string, collate string, engine string, dbr *dbf.Rea
 				//a VARCHAR will do it, +2 it's for sign and decimal sep.
 				fieldtype = fmt.Sprintf("VARCHAR(%d)", dbfld.Len+2)
 			} else {
-				if dbfld.Len > 9 && !nobigint {
-					fieldtype = fmt.Sprintf("BIGINT(%d)", dbfld.Len)
-				} else {
-					fieldtype = fmt.Sprintf("INT(%d)", dbfld.Len)
+				var inttype string
+				switch {
+				case dbfld.Len < 3:
+					inttype = "TINYINT"
+				case dbfld.Len >= 3 && dbfld.Len < 5:
+					inttype = "SMALLINT"
+				case dbfld.Len >= 5 && dbfld.Len < 7:
+					inttype = "MEDIUMINT"
+				case (dbfld.Len >= 7 && dbfld.Len < 10) || nobigint:
+					inttype = "INT"
+				case dbfld.Len >= 10:
+					inttype = "BIGINT"
 				}
+				fieldtype = fmt.Sprintf("%s(%d)", inttype, dbfld.Len)
 			}
 		default:
 			fieldtype = "VARCHAR(254)"
@@ -136,7 +145,7 @@ func main() {
 		if verbose {
 			fmt.Println("Dropping table:", argl[2])
 		}
-		_, erd := db.Exec(fmt.Sprintf("DROP TABLE `%s`;", argl[2]))
+		_, erd := db.Exec(fmt.Sprintf("DROP TABLE IF EXISTS `%s`;", argl[2]))
 		if erd != nil {
 			log.Fatal("Dropping:", erd)
 		}
