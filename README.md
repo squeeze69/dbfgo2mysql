@@ -4,11 +4,13 @@ License: GPLv3
 
 BTW: Credits to "Squeeze69" would be appreciated if you use this code.
 
+Please Note: there is no link between this code and "dbfgo".
+
 NOTICE: USE THIS CODE AT YOUR OWN RISK, NO WARRANTIES!
 
-This could cause the end of the universe, or, worst, some buraucratic nightmares.
+This could cause the end of the universe, or, worst, some bureaucratic nightmares (just kidding).
 
-Use this at your own risk.
+To get, this should work: go get github.com/squeeze69/dbfgo2mysql
 
 Build: go build dbfgo2mysql.go
 
