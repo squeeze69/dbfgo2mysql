@@ -1,5 +1,7 @@
 DBFGO2MYSQL - Squeeze69
 
+DBF to MySql program written in GO ( https://golang.org )
+
 License: GPLv3
 
 BTW: Credits to "Squeeze69" would be appreciated if you use this code.
@@ -14,7 +16,7 @@ To get, this should work: go get github.com/squeeze69/dbfgo2mysql
 
 Build: go build dbfgo2mysql.go
 
-Should be read: DBF, please, GO TO MYSQL! (DBF GO 2 MYSQL)
+The name should be read: DBF, please, GO TO MYSQL! (DBF GO 2 MYSQL)
 
 It's a simple tool to import dbf files into mysql/mariadb tables, optionally creating them.
 
@@ -53,6 +55,6 @@ The flags, up to now, are:
 -verbose
 	verbose output
 
-
-
 Please, feel free to contact me for bug,suggestions and so on.
+
+Suggested development environment: Atom ( https://atom.io ) with the "go-plus" package.

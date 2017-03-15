@@ -11,8 +11,8 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"runtime"
 	"strings"
+	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/squeeze69/dbf"
@@ -25,8 +25,10 @@ const (
 )
 
 //global mysqlurl - see the go lang database/sql package
-//sample nopwd url: "root:@(127.0.0.1:3306)/database"
+//sample url: "user:passwordd@(127.0.0.1:3306)/database"
 var mysqlurl string
+
+//variuous flags, set by command line, default to false
 var verbose, truncate, createtable, insertignore, nobigint, droptable bool
 var maxrecord int
 
@@ -53,6 +55,7 @@ func readprofile(prfname string) error {
 //returns a "CREATE TABLE" string
 func createtablestring(table string, collate string, engine string, dbr *dbf.Reader) string {
 	var fieldtype string
+	//pre allocate, 200 is an arbitrary value
 	arf := make([]string, 0, 200)
 	fields := dbr.FieldNames()
 	for k := range fields {
@@ -66,7 +69,7 @@ func createtablestring(table string, collate string, engine string, dbr *dbf.Rea
 			fieldtype = fmt.Sprintf("VARCHAR(%d)", dbfld.Len)
 		case 'N': //Numeric could be either Int or fixed point decimal
 			if dbfld.DecimalPlaces > 0 {
-				//a VARCHAR will do it, +2 it's for sign and decimal sep.
+				//A VARCHAR will do it, +2 it's for sign and decimal sep.
 				fieldtype = fmt.Sprintf("VARCHAR(%d)", dbfld.Len+2)
 			} else {
 				var inttype string
@@ -85,7 +88,7 @@ func createtablestring(table string, collate string, engine string, dbr *dbf.Rea
 				fieldtype = fmt.Sprintf("%s(%d)", inttype, dbfld.Len)
 			}
 		default:
-			fieldtype = "VARCHAR(254)"
+			fieldtype = fmt.Sprintf("VARCHAR(%d)", dbfld.Len)
 		}
 
 		arf = append(arf, fmt.Sprintf("`%s` %s", dbf.Tillzero(dbfld.Name[:]), fieldtype))
@@ -95,13 +98,12 @@ func createtablestring(table string, collate string, engine string, dbr *dbf.Rea
 }
 
 func main() {
+	var start = time.Now()
 	var rec dbf.OrderedRecord
 	var qstring string
 	var skipped, inserted int
 	var insertstatement = "INSERT"
 	placeholder := make([]string, 0, 200) //preallocate
-
-	var memst runtime.MemStats
 
 	flag.BoolVar(&verbose, "v", false, "verbose output")
 	flag.BoolVar(&truncate, "truncate", false, "truncate table before writing")
@@ -218,7 +220,6 @@ func main() {
 			log.Fatal("Loop Error: record:", i, " of ", dbfile.Length, " Error:", err)
 		}
 	}
-	runtime.ReadMemStats(&memst)
-	fmt.Printf("Records: Inserted: %d Skipped: %d\n", inserted, skipped)
-	fmt.Println("Total Allocated KiB: ", memst.TotalAlloc/1024)
+	fmt.Printf("Records: Inserted: %d Skipped: %d\nElapsed Time:%s\n",
+		inserted, skipped, time.Now().Sub(start))
 }
