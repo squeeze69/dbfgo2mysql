@@ -97,14 +97,7 @@ func createtablestring(table string, collate string, engine string, dbr *dbf.Rea
 		table, strings.Join(arf, ",\n"), collate, engine)
 }
 
-func main() {
-	var start = time.Now()
-	var rec dbf.OrderedRecord
-	var qstring string
-	var skipped, inserted int
-	var insertstatement = "INSERT"
-	placeholder := make([]string, 0, 200) //preallocate
-
+func commandLineSet() {
 	flag.BoolVar(&verbose, "v", false, "verbose output")
 	flag.BoolVar(&truncate, "truncate", false, "truncate table before writing")
 	flag.BoolVar(&droptable, "drop", false, "drop table before anything")
@@ -115,6 +108,17 @@ func main() {
 	flag.StringVar(&engine, "engine", "MyIsam", "Engine to use with CREATE TABLE")
 	flag.BoolVar(&createtable, "create", false, "Switch to CREATE TABLE IF NOT EXISTS")
 	flag.Parse()
+
+}
+
+func main() {
+	var start = time.Now()
+	var rec dbf.OrderedRecord
+	var qstring string
+	var skipped, inserted int
+	var insertstatement = "INSERT"
+	placeholder := make([]string, 0, 200) //preallocate
+	commandLineSet()
 
 	argl := flag.Args()
 	if len(argl) < 3 {
@@ -143,6 +147,7 @@ func main() {
 	}
 	dbfile.SetFlags(dbf.FlagDateAssql | dbf.FlagSkipWeird | dbf.FlagSkipDeleted)
 
+	//check if the table must be dropped before creation
 	if droptable {
 		if verbose {
 			fmt.Println("Dropping table:", argl[2])
@@ -152,6 +157,7 @@ func main() {
 			log.Fatal("Dropping:", erd)
 		}
 	}
+
 	//create table section
 	if createtable {
 		if verbose {
