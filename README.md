@@ -39,6 +39,8 @@ The flags, up to now, are:
 -create
 	create table - actually, some guesswork goes on to build the "create table ..." statement.
 	The "int" types are reduced to their bare minumum for storage (i.e.: 1 digit = TINYINT,etc..)
+-dumpcreatetable
+	dumps on stdout the create table code and exit.
 -engine=...[default: MyIsam]
 -collate=...[default: utf8_general_ci]
 -nobigint

@@ -1,5 +1,5 @@
 //conversion from dbf to mysql
-//version 0.1.0
+//version 0.1.0 (probably forever,I'm a kind of conservative in changing the version)
 //written by squeeze69
 
 package main
@@ -29,7 +29,7 @@ const (
 var mysqlurl string
 
 //variuous flags, set by command line, default to false
-var verbose, truncate, createtable, insertignore, nobigint, droptable bool
+var verbose, truncate, createtable, dumpcreatetable, insertignore, nobigint, droptable bool
 var maxrecord int
 
 //global variables for --create
@@ -107,6 +107,7 @@ func commandLineSet() {
 	flag.StringVar(&collate, "collate", "utf8_general_ci", "Collate to use with CREATE TABLE")
 	flag.StringVar(&engine, "engine", "MyIsam", "Engine to use with CREATE TABLE")
 	flag.BoolVar(&createtable, "create", false, "Switch to CREATE TABLE IF NOT EXISTS")
+	flag.BoolVar(&dumpcreatetable, "dumpcreatetable", false, "Dump the CREATE TABLE string and exit,no other actions.")
 	flag.Parse()
 
 }
@@ -148,7 +149,7 @@ func main() {
 	dbfile.SetFlags(dbf.FlagDateAssql | dbf.FlagSkipWeird | dbf.FlagSkipDeleted)
 
 	//check if the table must be dropped before creation
-	if droptable {
+	if droptable && !dumpcreatetable {
 		if verbose {
 			fmt.Println("Dropping table:", argl[2])
 		}
@@ -159,7 +160,7 @@ func main() {
 	}
 
 	//create table section
-	if createtable {
+	if createtable || dumpcreatetable {
 		if verbose {
 			fmt.Println("Creating Table: ", argl[2])
 		}
@@ -168,8 +169,11 @@ func main() {
 		if erc != nil {
 			log.Fatal("CREATE TABLE:", erc)
 		}
-		if verbose {
-			fmt.Println("CREATE TABLE:\n", ctstring)
+		if verbose || dumpcreatetable {
+			fmt.Println("--- CREATE TABLE:\n", ctstring)
+		}
+		if dumpcreatetable {
+			os.Exit(0)
 		}
 	}
 
