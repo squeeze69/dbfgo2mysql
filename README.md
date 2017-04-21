@@ -46,7 +46,7 @@ The flags, up to now, are:
 -nobigint
 	DONT'T use BIGINT type, even if there are more than 9 digits
 
--inserignore
+-insertignore
 	The "INSERT IGNORE" statement is used instead of "INSERT ", meaning this, if there is duplicate primary key, the error
 	doesn't stop the import.
 
