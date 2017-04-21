@@ -34,15 +34,21 @@ see here ( https://github.com/go-sql-driver/mysql/#dsn-data-source-name ).
 Of Course: The user MUST have grants to perform actions.
 
 The flags, up to now, are:
+
 -truncate
 	truncate table before writing
+	
 -create
 	create table - actually, some guesswork goes on to build the "create table ..." statement.
 	The "int" types are reduced to their bare minumum for storage (i.e.: 1 digit = TINYINT,etc..)
+
 -dumpcreatetable
 	dumps on stdout the create table code and exit.
+
 -engine=...[default: MyIsam]
+
 -collate=...[default: utf8_general_ci]
+
 -nobigint
 	DONT'T use BIGINT type, even if there are more than 9 digits
 
