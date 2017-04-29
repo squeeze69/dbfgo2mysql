@@ -165,12 +165,14 @@ func main() {
 			fmt.Println("Creating Table: ", argl[2])
 		}
 		ctstring := createtablestring(argl[2], collate, engine, dbfile)
-		_, erc := db.Exec(ctstring)
-		if erc != nil {
-			log.Fatal("CREATE TABLE:", erc)
+		if !dumpcreatetable {
+			_, erc := db.Exec(ctstring)
+			if erc != nil {
+				log.Fatal("CREATE TABLE:", erc)
+			}
 		}
 		if verbose || dumpcreatetable {
-			fmt.Println("--- CREATE TABLE:\n", ctstring)
+			fmt.Println("-- CREATE TABLE:\n", ctstring)
 		}
 		if dumpcreatetable {
 			os.Exit(0)
