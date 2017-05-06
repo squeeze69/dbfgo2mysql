@@ -132,11 +132,13 @@ func main() {
 		log.Fatal("Error!!:", err)
 	}
 
+	//open the mysql link
 	db, err := sql.Open("mysql", mysqlurl)
 	if err != nil {
 		log.Fatal("Errore!", err)
 	}
 	defer db.Close()
+
 	inpf, err := os.Open(argl[1])
 	if err != nil {
 		log.Fatal("dbf file open:", err)
@@ -191,6 +193,7 @@ func main() {
 		}
 	}
 
+	//building the code for the prepared statement
 	if insertignore {
 		insertstatement = "INSERT IGNORE"
 	}
@@ -198,7 +201,7 @@ func main() {
 	if verbose {
 		fmt.Println("QSTRING:", qstring)
 	}
-	// retrieve field names
+	//it's using a prepared statement, much safer and faster
 	stmt, err := db.Prepare(qstring)
 	if err != nil {
 		log.Fatal("Errore! Preparazione statement:", err, "\n", qstring)
