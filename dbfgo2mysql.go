@@ -204,7 +204,7 @@ func main() {
 	//it's using a prepared statement, much safer and faster
 	stmt, err := db.Prepare(qstring)
 	if err != nil {
-		log.Fatal("Errore! Preparazione statement:", err, "\n", qstring)
+		log.Fatal("Errore! Preparing statement:", err, "\n", qstring)
 	}
 	defer stmt.Close()
 
@@ -235,6 +235,6 @@ func main() {
 			log.Fatal("Loop Error: record:", i, " of ", dbfile.Length, " Error:", err)
 		}
 	}
-	fmt.Printf("Records: Inserted: %d Skipped: %d\nElapsed Time:%s\n",
+	fmt.Printf("Records: Inserted: %d Skipped: %d\nElapsed Time: %s\n",
 		inserted, skipped, time.Now().Sub(start))
 }
