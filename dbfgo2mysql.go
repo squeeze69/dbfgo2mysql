@@ -155,8 +155,7 @@ func main() {
 		if verbose {
 			fmt.Println("Dropping table:", argl[2])
 		}
-		_, erd := db.Exec(fmt.Sprintf("DROP TABLE IF EXISTS `%s`;", argl[2]))
-		if erd != nil {
+		if _, erd := db.Exec(fmt.Sprintf("DROP TABLE IF EXISTS `%s`;", argl[2])); erd != nil {
 			log.Fatal("Dropping:", erd)
 		}
 	}
@@ -168,8 +167,7 @@ func main() {
 		}
 		ctstring := createtablestring(argl[2], collate, engine, dbfile)
 		if !dumpcreatetable {
-			_, erc := db.Exec(ctstring)
-			if erc != nil {
+			if _, erc := db.Exec(ctstring); erc != nil {
 				log.Fatal("CREATE TABLE:", erc)
 			}
 		}
@@ -221,14 +219,12 @@ func main() {
 			if verbose {
 				fmt.Println(rec)
 			}
-			_, err1 := stmt.Exec(rec...)
-			if err1 != nil {
+			if _, err1 := stmt.Exec(rec...); err1 != nil {
 				log.Fatal("Errore: stmt.Exec:record:", i, " of ", dbfile.Length, "Error:", err1)
 			}
 			inserted++
 		} else {
-			_, ok := err.(*dbf.SkipError)
-			if ok {
+			if _, ok := err.(*dbf.SkipError); ok {
 				skipped++
 				continue
 			}
