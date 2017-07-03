@@ -6,12 +6,14 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"database/sql"
 	"flag"
 	"fmt"
 	"log"
 	"os"
 	"strings"
+	"text/template"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -90,11 +92,31 @@ func createtablestring(table string, collate string, engine string, dbr *dbf.Rea
 		default:
 			fieldtype = fmt.Sprintf("VARCHAR(%d)", dbfld.Len)
 		}
-
 		arf = append(arf, fmt.Sprintf("`%s` %s", dbf.Tillzero(dbfld.Name[:]), fieldtype))
 	}
-	return fmt.Sprintf("CREATE TABLE IF NOT EXISTS `%s` (\n%s\n)\nCOLLATE='%s' ENGINE = %s;",
-		table, strings.Join(arf, ",\n"), collate, engine)
+
+	tmpl, err := template.New("table").Parse(
+		`CREATE TABLE IF NOT EXISTS {{.Tablename}} {
+{{range $i,$e := .Arf}}
+{{if $i}},{{end}}
+{{$e -}}
+{{end}}
+} COLLATE='{{.Collate}}' ENGINE='{{.Engine}}';`)
+	if err != nil {
+		log.Fatal(err)
+	}
+	var str string
+	buf := bytes.NewBufferString(str)
+	er1 := tmpl.Execute(buf, struct {
+		Tablename, Collate, Engine string
+		Arf                        []string
+	}{Tablename: "`" + table + "`", Collate: collate, Engine: engine, Arf: arf})
+	if er1 != nil {
+		log.Fatal(er1)
+	}
+	return buf.String()
+	//return fmt.Sprintf("CREATE TABLE IF NOT EXISTS `%s` (\n%s\n)\nCOLLATE='%s' ENGINE = %s;",
+	//	table, strings.Join(arf, ",\n"), collate, engine)
 }
 
 //Prepare the command line handling
