@@ -97,6 +97,7 @@ func createtablestring(table string, collate string, engine string, dbr *dbf.Rea
 		table, strings.Join(arf, ",\n"), collate, engine)
 }
 
+//Prepare the command line handling
 func commandLineSet() {
 	flag.BoolVar(&verbose, "v", false, "verbose output")
 	flag.BoolVar(&truncate, "truncate", false, "truncate table before writing")
