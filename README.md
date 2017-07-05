@@ -48,9 +48,9 @@ The flags, up to now, are:
 
 -dumpcreatetable : dumps on stdout the create table code and exit.
 
--engine=...[default: MyIsam]
+-engine=...[default: MyIsam - if left empty - no Engine="..." is used]
 
--collate=...[default: utf8_general_ci]
+-collate=...[default: utf8_general_ci - if left empty - no Collate="..." is used]
 
 -nobigint : DONT'T use BIGINT type, even if there are more than 9 digits
 

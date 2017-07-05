@@ -98,10 +98,9 @@ func createtablestring(table string, collate string, engine string, dbr *dbf.Rea
 	tmpl, err := template.New("table").Parse(
 		`CREATE TABLE IF NOT EXISTS {{.Tablename}} {
 {{range $i,$e := .Arf}}
-{{if $i}},{{end}}
-{{$e -}}
-{{end}}
-} COLLATE='{{.Collate}}' ENGINE='{{.Engine}}';`)
+{{if $i}},
+{{end}}{{$e -}}{{end}}
+} {{if .Collate}}COLLATE='{{.Collate}}'{{end}} {{if .Engine}}ENGINE='{{.Engine}}'{{end}};`)
 	if err != nil {
 		log.Fatal(err)
 	}
