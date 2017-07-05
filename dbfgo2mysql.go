@@ -100,7 +100,7 @@ func createtablestring(table string, collate string, engine string, dbr *dbf.Rea
 {{range $i,$e := .Arf}}
 {{if $i}},
 {{end}}{{$e -}}{{end}}
-} {{if .Collate}}COLLATE='{{.Collate}}'{{end}} {{if .Engine}}ENGINE='{{.Engine}}'{{end}};`)
+}{{if .Collate}} COLLATE='{{.Collate}}'{{end}}{{if .Engine}} ENGINE='{{.Engine}}'{{end}};`)
 	if err != nil {
 		log.Fatal(err)
 	}
