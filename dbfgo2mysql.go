@@ -114,8 +114,6 @@ func createtablestring(table string, collate string, engine string, dbr *dbf.Rea
 		log.Fatal(er1)
 	}
 	return buf.String()
-	//return fmt.Sprintf("CREATE TABLE IF NOT EXISTS `%s` (\n%s\n)\nCOLLATE='%s' ENGINE = %s;",
-	//	table, strings.Join(arf, ",\n"), collate, engine)
 }
 
 //Prepare the command line handling
@@ -126,8 +124,8 @@ func commandLineSet() {
 	flag.BoolVar(&insertignore, "insertignore", false, "use 'INSERT IGNORE' instead of INSERT")
 	flag.BoolVar(&nobigint, "nobigint", false, "DON'T use BIGINT type, sometimes fields are over-dimensioned")
 	flag.IntVar(&maxrecord, "m", -1, "maximum number of records to read")
-	flag.StringVar(&collate, "collate", "utf8_general_ci", "Collate to use with CREATE TABLE")
-	flag.StringVar(&engine, "engine", "MyIsam", "Engine to use with CREATE TABLE")
+	flag.StringVar(&collate, "collate", "utf8_general_ci", "Collate to use with CREATE TABLE (if empty, no collate is specified)")
+	flag.StringVar(&engine, "engine", "MyIsam", "Engine to use with CREATE TABLE (if empty, no engine is specified)")
 	flag.BoolVar(&createtable, "create", false, "Switch to CREATE TABLE IF NOT EXISTS")
 	flag.BoolVar(&dumpcreatetable, "dumpcreatetable", false, "Dump the CREATE TABLE string and exit,no other actions.")
 	flag.Parse()
