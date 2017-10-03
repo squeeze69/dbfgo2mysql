@@ -32,6 +32,7 @@ var mysqlurl string
 
 //variuous flags, set by command line, default to false
 var verbose, truncate, createtable, dumpcreatetable, insertignore, nobigint, droptable bool
+//max number of record to import, defaults to -1 (means no limit)
 var maxrecord int
 
 //global variables for --create
@@ -132,6 +133,7 @@ func commandLineSet() {
 
 }
 
+
 func main() {
 	var start = time.Now()
 	var rec dbf.OrderedRecord
@@ -155,7 +157,7 @@ func main() {
 	//open the mysql link
 	db, err := sql.Open("mysql", mysqlurl)
 	if err != nil {
-		log.Fatal("Errore!", err)
+		log.Fatal("Error!", err)
 	}
 	defer db.Close()
 
@@ -222,7 +224,7 @@ func main() {
 	//it's using a prepared statement, much safer and faster
 	stmt, err := db.Prepare(qstring)
 	if err != nil {
-		log.Fatal("Errore! Preparing statement:", err, "\n", qstring)
+		log.Fatal("Error! Preparing statement:", err, "\n", qstring)
 	}
 	defer stmt.Close()
 
@@ -240,7 +242,7 @@ func main() {
 				fmt.Println(rec)
 			}
 			if _, err1 := stmt.Exec(rec...); err1 != nil {
-				log.Fatal("Errore: stmt.Exec:record:", i, " of ", dbfile.Length, "Error:", err1)
+				log.Fatal("Error: stmt.Exec:record:", i, " of ", dbfile.Length, "Error:", err1)
 			}
 			inserted++
 		} else {
