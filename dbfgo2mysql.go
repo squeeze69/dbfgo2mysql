@@ -101,11 +101,11 @@ func createtablestring(table string, collate string, engine string, dbr *dbf.Rea
 	}
 
 	tmpl, err := template.New("table").Parse(
-		`CREATE TABLE IF NOT EXISTS {{.Tablename}} {
+		`CREATE TABLE IF NOT EXISTS {{.Tablename}} (
 {{range $i,$e := .Arf}}
 {{- if $i}},
 {{end}}{{$e}}{{end}}
-}{{if .Collate}} COLLATE='{{.Collate}}'{{end}}{{if .Engine}} ENGINE='{{.Engine}}'{{end}};`)
+){{if .Collate}} COLLATE='{{.Collate}}'{{end}}{{if .Engine}} ENGINE='{{.Engine}}'{{end}};`)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -205,7 +205,7 @@ func main() {
 		ctstring := createtablestring(argl[2], collate, engine, dbfile)
 		if !dumpcreatetable {
 			if _, erc := db.Exec(ctstring); erc != nil {
-				log.Fatal("CREATE TABLE:", erc)
+				log.Fatal("CREATE TABLE:", erc, "\n", ctstring)
 			}
 		}
 		if verbose || dumpcreatetable {
