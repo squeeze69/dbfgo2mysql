@@ -32,12 +32,16 @@ var mysqlurl string
 
 //variuous flags, set by command line, default to false
 var verbose, truncate, createtable, dumpcreatetable, insertignore, nobigint, droptable bool
+
 //max number of record to import, defaults to -1 (means no limit)
 var maxrecord int
 
 //global variables for --create
 var collate = defaultCollation
 var engine = defaultEngine
+
+//global variables
+var stmt *sql.Stmt
 
 //read profile, actually a fixed position file, first row it's a sql url
 func readprofile(prfname string) error {
@@ -133,13 +137,23 @@ func commandLineSet() {
 
 }
 
+//insertRoutine goroutine to insert data
+func insertRoutine(ch chan dbf.OrderedRecord, stmt *sql.Stmt) error {
+	for i := range ch {
+		_, err := stmt.Exec(i...)
+		if err != nil {
+			panic(err)
+		}
+	}
+	return nil
+}
 
 func main() {
 	var start = time.Now()
-	var rec dbf.OrderedRecord
 	var qstring string
 	var skipped, inserted int
 	var insertstatement = "INSERT"
+
 	placeholder := make([]string, 0, 200) //preallocate
 	commandLineSet()
 
@@ -156,6 +170,7 @@ func main() {
 
 	//open the mysql link
 	db, err := sql.Open("mysql", mysqlurl)
+
 	if err != nil {
 		log.Fatal("Error!", err)
 	}
@@ -223,6 +238,7 @@ func main() {
 	}
 	//it's using a prepared statement, much safer and faster
 	stmt, err := db.Prepare(qstring)
+
 	if err != nil {
 		log.Fatal("Error! Preparing statement:", err, "\n", qstring)
 	}
@@ -232,18 +248,20 @@ func main() {
 		fmt.Println("Number of dbf records:", dbfile.Length)
 	}
 
+	chord := make(chan dbf.OrderedRecord)
+	go insertRoutine(chord, stmt)
+
 	for i := 0; i < dbfile.Length; i++ {
 		if maxrecord >= 0 && i >= maxrecord {
 			break
 		}
-		rec, err = dbfile.ReadOrdered(i)
+		rec, err := dbfile.ReadOrdered(i)
+
 		if err == nil {
 			if verbose {
 				fmt.Println(rec)
 			}
-			if _, err1 := stmt.Exec(rec...); err1 != nil {
-				log.Fatal("Error: stmt.Exec:record:", i, " of ", dbfile.Length, "Error:", err1)
-			}
+			chord <- rec
 			inserted++
 		} else {
 			if _, ok := err.(*dbf.SkipError); ok {
@@ -253,6 +271,7 @@ func main() {
 			log.Fatal("Loop Error: record:", i, " of ", dbfile.Length, " Error:", err)
 		}
 	}
+	close(chord)
 	fmt.Printf("Records: Inserted: %d Skipped: %d\nElapsed Time: %s\n",
 		inserted, skipped, time.Now().Sub(start))
 }
