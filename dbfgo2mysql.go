@@ -24,6 +24,7 @@ import (
 const (
 	defaultEngine    = "MyIsam"
 	defaultCollation = "utf8_general_ci"
+	recordQueue      = 100
 )
 
 //global mysqlurl - see the go lang database/sql package
@@ -138,13 +139,14 @@ func commandLineSet() {
 }
 
 //insertRoutine goroutine to insert data
-func insertRoutine(ch chan dbf.OrderedRecord, stmt *sql.Stmt) error {
+func insertRoutine(ch chan dbf.OrderedRecord, over chan int, stmt *sql.Stmt) error {
 	for i := range ch {
 		_, err := stmt.Exec(i...)
 		if err != nil {
 			panic(err)
 		}
 	}
+	over <- 1
 	return nil
 }
 
@@ -185,7 +187,7 @@ func main() {
 	if err != nil {
 		log.Fatal("dbf newreader:", err)
 	}
-	dbfile.SetFlags(dbf.FlagDateAssql | dbf.FlagSkipWeird | dbf.FlagSkipDeleted)
+	dbfile.SetFlags(dbf.FlagDateAssql | dbf.FlagSkipWeird | dbf.FlagSkipDeleted | dbf.FlagEmptyDateAsZero)
 
 	//check if the table must be dropped before creation
 	if droptable && !dumpcreatetable {
@@ -248,8 +250,9 @@ func main() {
 		fmt.Println("Number of dbf records:", dbfile.Length)
 	}
 
-	chord := make(chan dbf.OrderedRecord)
-	go insertRoutine(chord, stmt)
+	chord := make(chan dbf.OrderedRecord, recordQueue)
+	cmd := make(chan int)
+	go insertRoutine(chord, cmd, stmt)
 
 	for i := 0; i < dbfile.Length; i++ {
 		if maxrecord >= 0 && i >= maxrecord {
@@ -272,6 +275,9 @@ func main() {
 		}
 	}
 	close(chord)
+	//just to wait for insertRoutine to end
+	<-cmd
+	close(cmd)
 	fmt.Printf("Records: Inserted: %d Skipped: %d\nElapsed Time: %s\n",
 		inserted, skipped, time.Now().Sub(start))
 }
