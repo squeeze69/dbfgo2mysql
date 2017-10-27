@@ -32,6 +32,7 @@ var mysqlurl string
 
 //variuous flags, set by command line, default to false
 var verbose, truncate, createtable, dumpcreatetable, insertignore, nobigint, droptable bool
+
 //max number of record to import, defaults to -1 (means no limit)
 var maxrecord int
 
@@ -97,11 +98,11 @@ func createtablestring(table string, collate string, engine string, dbr *dbf.Rea
 	}
 
 	tmpl, err := template.New("table").Parse(
-		`CREATE TABLE IF NOT EXISTS {{.Tablename}} {
+		`CREATE TABLE IF NOT EXISTS {{.Tablename}} (
 {{range $i,$e := .Arf}}
 {{- if $i}},
 {{end}}{{$e}}{{end}}
-}{{if .Collate}} COLLATE='{{.Collate}}'{{end}}{{if .Engine}} ENGINE='{{.Engine}}'{{end}};`)
+){{if .Collate}} COLLATE='{{.Collate}}'{{end}}{{if .Engine}} ENGINE='{{.Engine}}'{{end}};`)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -132,7 +133,6 @@ func commandLineSet() {
 	flag.Parse()
 
 }
-
 
 func main() {
 	var start = time.Now()
