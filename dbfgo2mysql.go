@@ -13,6 +13,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"sync"
 	"text/template"
 	"time"
 
@@ -22,10 +23,19 @@ import (
 
 // default values and other constants
 const (
-	defaultEngine    = "MyIsam"
-	defaultCollation = "utf8_general_ci"
-	recordQueue      = 100
+	defaultEngine      = "MyIsam"
+	defaultCollation   = "utf8_general_ci"
+	defaultRecordQueue = 100
+	defaultGoroutines  = 2
+	maxGoroutines      = 16
+	minGoroutines      = 1
+	minRecordQueue     = 1
 )
+
+//stats
+var maxqueue, totqueue, samples int
+var recordQueue = defaultRecordQueue
+var numGoroutines = defaultGoroutines
 
 //global mysqlurl - see the go lang database/sql package
 //sample url: "user:passwordd@(127.0.0.1:3306)/database"
@@ -134,20 +144,36 @@ func commandLineSet() {
 	flag.StringVar(&engine, "engine", "MyIsam", "Engine to use with CREATE TABLE (if empty, no engine is specified)")
 	flag.BoolVar(&createtable, "create", false, "Switch to CREATE TABLE IF NOT EXISTS")
 	flag.BoolVar(&dumpcreatetable, "dumpcreatetable", false, "Dump the CREATE TABLE string and exit,no other actions.")
+	flag.IntVar(&recordQueue, "q", defaultRecordQueue, "Max record queue")
+	flag.IntVar(&numGoroutines, "g", defaultGoroutines, "Max number of insert threads (keep it low...)")
 	flag.Parse()
+	//enforce limits
+	switch {
+	case numGoroutines < minGoroutines:
+		numGoroutines = minGoroutines
+	case numGoroutines > maxGoroutines:
+		numGoroutines = maxGoroutines
+	}
+	if recordQueue < minRecordQueue {
+		recordQueue = minRecordQueue
+	}
+	//a recordQueue less than goroutines*2 is a waste of resources
+	if recordQueue < numGoroutines*2 {
+		recordQueue = numGoroutines*2
+	}
 
 }
 
-//insertRoutine goroutine to insert data
-func insertRoutine(ch chan dbf.OrderedRecord, over chan int, stmt *sql.Stmt) error {
+//insertRoutine goroutine to insert data in mysql
+func insertRoutine(ch chan dbf.OrderedRecord, over *sync.WaitGroup, stmt *sql.Stmt) {
 	for i := range ch {
 		_, err := stmt.Exec(i...)
 		if err != nil {
 			panic(err)
 		}
 	}
-	over <- 1
-	return nil
+	over.Done()
+	return
 }
 
 func main() {
@@ -156,7 +182,7 @@ func main() {
 	var skipped, inserted int
 	var insertstatement = "INSERT"
 
-	placeholder := make([]string, 0, 200) //preallocate
+	placeholder := make([]string, 0, 200) //preallocate to reduce memory fragmentation
 	commandLineSet()
 
 	argl := flag.Args()
@@ -251,9 +277,12 @@ func main() {
 	}
 
 	chord := make(chan dbf.OrderedRecord, recordQueue)
-	cmd := make(chan int)
-	go insertRoutine(chord, cmd, stmt)
-
+	wgroup := new(sync.WaitGroup)
+	for i := 0; i < numGoroutines; i = i + 1 {
+		wgroup.Add(1)
+		go insertRoutine(chord, wgroup, stmt)
+	}
+	var nowqueue int
 	for i := 0; i < dbfile.Length; i++ {
 		if maxrecord >= 0 && i >= maxrecord {
 			break
@@ -264,8 +293,14 @@ func main() {
 			if verbose {
 				fmt.Println(rec)
 			}
+			nowqueue = len(chord)
 			chord <- rec
 			inserted++
+			if nowqueue > maxqueue {
+				maxqueue = nowqueue
+			}
+			totqueue = totqueue + nowqueue
+			samples = samples + 1
 		} else {
 			if _, ok := err.(*dbf.SkipError); ok {
 				skipped++
@@ -276,8 +311,12 @@ func main() {
 	}
 	close(chord)
 	//just to wait for insertRoutine to end
-	<-cmd
-	close(cmd)
+	var endqueue int
+	endqueue = len(chord)
+	wgroup.Wait()
 	fmt.Printf("Records: Inserted: %d Skipped: %d\nElapsed Time: %s\n",
 		inserted, skipped, time.Now().Sub(start))
+
+	fmt.Printf("Queue (set:%d,goroutines:%d): max: %d, end: %d, samples: %d, avg:%f\n",
+		recordQueue, numGoroutines, maxqueue, endqueue, samples, float32(totqueue)/float32(samples))
 }
