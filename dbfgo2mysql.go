@@ -32,8 +32,6 @@ const (
 	minRecordQueue     = 1
 )
 
-//stats
-var maxqueue, totqueue, samples int
 var recordQueue = defaultRecordQueue
 var numGoroutines = defaultGoroutines
 
@@ -157,9 +155,9 @@ func commandLineSet() {
 	if recordQueue < minRecordQueue {
 		recordQueue = minRecordQueue
 	}
-	//a recordQueue less than goroutines*2 is a waste of resources
-	if recordQueue < numGoroutines*2 {
-		recordQueue = numGoroutines*2
+	//a recordQueue less than goroutines is a waste of resources
+	if recordQueue < numGoroutines {
+		recordQueue = numGoroutines
 	}
 
 }
@@ -282,7 +280,6 @@ func main() {
 		wgroup.Add(1)
 		go insertRoutine(chord, wgroup, stmt)
 	}
-	var nowqueue int
 	for i := 0; i < dbfile.Length; i++ {
 		if maxrecord >= 0 && i >= maxrecord {
 			break
@@ -293,14 +290,8 @@ func main() {
 			if verbose {
 				fmt.Println(rec)
 			}
-			nowqueue = len(chord)
 			chord <- rec
 			inserted++
-			if nowqueue > maxqueue {
-				maxqueue = nowqueue
-			}
-			totqueue = totqueue + nowqueue
-			samples = samples + 1
 		} else {
 			if _, ok := err.(*dbf.SkipError); ok {
 				skipped++
@@ -311,12 +302,9 @@ func main() {
 	}
 	close(chord)
 	//just to wait for insertRoutine to end
-	var endqueue int
-	endqueue = len(chord)
 	wgroup.Wait()
 	fmt.Printf("Records: Inserted: %d Skipped: %d\nElapsed Time: %s\n",
 		inserted, skipped, time.Now().Sub(start))
-
-	fmt.Printf("Queue (set:%d,goroutines:%d): max: %d, end: %d, samples: %d, avg:%f\n",
-		recordQueue, numGoroutines, maxqueue, endqueue, samples, float32(totqueue)/float32(samples))
+	fmt.Printf("Queue capacity:%d,goroutines:%d\n",
+		recordQueue, numGoroutines)
 }
