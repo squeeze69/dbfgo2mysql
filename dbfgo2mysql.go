@@ -28,7 +28,7 @@ const (
 	defaultCollation   = "utf8_general_ci"
 	defaultRecordQueue = 100
 	defaultGoroutines  = 2
-	maxGoroutines      = 16
+	maxGoroutines      = 64
 	minGoroutines      = 1
 	minRecordQueue     = 1
 )
@@ -165,21 +165,21 @@ func commandLineSet() {
 
 //insertRoutine goroutine to insert data in mysql
 func insertRoutine(ch chan dbf.OrderedRecord, over *sync.WaitGroup, stmt *sql.Stmt) {
+	defer over.Done()
 	for i := range ch {
 		_, err := stmt.Exec(i...)
 		if err != nil {
 			panic(err)
 		}
 	}
-	over.Done()
 	return
 }
 
 func main() {
 	var start = time.Now()
 	var qstring string
-	var skipped, inserted int
 	var insertstatement = "INSERT"
+	var skipped, inserted int
 
 	placeholder := make([]string, 0, 200) //preallocate to reduce memory fragmentation
 	commandLineSet()
@@ -276,6 +276,7 @@ func main() {
 	}
 
 	chord := make(chan dbf.OrderedRecord, recordQueue)
+	defer close(chord)
 	wgroup := new(sync.WaitGroup)
 	for i := 0; i < numGoroutines; i = i + 1 {
 		wgroup.Add(1)
@@ -303,7 +304,6 @@ func main() {
 			log.Fatal("Loop Error: record:", i, " of ", dbfile.Length, " Error:", err)
 		}
 	}
-	close(chord)
 	//just to wait for insertRoutine to end
 	wgroup.Wait()
 	fmt.Printf("Records: Inserted: %d Skipped: %d\nElapsed Time: %s\n",
