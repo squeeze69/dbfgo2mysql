@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"runtime"
 	"strings"
 	"sync"
 	"text/template"
@@ -284,6 +285,8 @@ func main() {
 		if maxrecord >= 0 && i >= maxrecord {
 			break
 		}
+
+		runtime.Gosched()
 		rec, err := dbfile.ReadOrdered(i)
 
 		if err == nil {
