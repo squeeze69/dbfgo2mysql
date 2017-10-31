@@ -276,7 +276,6 @@ func main() {
 	}
 
 	chord := make(chan dbf.OrderedRecord, recordQueue)
-	defer close(chord)
 	wgroup := new(sync.WaitGroup)
 	for i := 0; i < numGoroutines; i = i + 1 {
 		wgroup.Add(1)
@@ -304,6 +303,7 @@ func main() {
 			log.Fatal("Loop Error: record:", i, " of ", dbfile.Length, " Error:", err)
 		}
 	}
+	close(chord)
 	//just to wait for insertRoutine to end
 	wgroup.Wait()
 	fmt.Printf("Records: Inserted: %d Skipped: %d\nElapsed Time: %s\n",
