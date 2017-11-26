@@ -133,12 +133,12 @@ func createtablestring(table string, collate string, engine string, dbr *dbf.Rea
 
 //Prepare the command line handling
 func commandLineSet() {
-	flag.BoolVar(&verbose, "v", false, "verbose output")
-	flag.BoolVar(&truncate, "truncate", false, "truncate table before writing")
-	flag.BoolVar(&droptable, "drop", false, "drop table before anything")
+	flag.BoolVar(&verbose, "v", false, "Verbose output")
+	flag.BoolVar(&truncate, "truncate", false, "Truncate table before writing")
+	flag.BoolVar(&droptable, "drop", false, "Drop table before anything")
 	flag.BoolVar(&insertignore, "insertignore", false, "use 'INSERT IGNORE' instead of INSERT")
 	flag.BoolVar(&nobigint, "nobigint", false, "DON'T use BIGINT type, sometimes fields are over-dimensioned")
-	flag.IntVar(&maxrecord, "m", -1, "maximum number of records to read")
+	flag.IntVar(&maxrecord, "m", -1, "Maximum number of records to read")
 	flag.StringVar(&collate, "collate", "utf8_general_ci", "Collate to use with CREATE TABLE (if empty, no collate is specified)")
 	flag.StringVar(&engine, "engine", "MyIsam", "Engine to use with CREATE TABLE (if empty, no engine is specified)")
 	flag.BoolVar(&createtable, "create", false, "Switch to CREATE TABLE IF NOT EXISTS")
@@ -163,7 +163,7 @@ func commandLineSet() {
 
 }
 
-//insertRoutine goroutine to insert data in mysql
+//insertRoutine goroutine to insert data in dbms
 func insertRoutine(ch chan dbf.OrderedRecord, over *sync.WaitGroup, stmt *sql.Stmt) {
 	defer over.Done()
 	for i := range ch {
