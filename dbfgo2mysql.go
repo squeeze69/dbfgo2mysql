@@ -1,6 +1,6 @@
 //conversion from dbf to mysql
-//version 0.1.0 (probably forever,I'm a kind of conservative in changing the version)
-//written by squeeze69
+//version 0.1.1 (probably forever,I'm a kind of conservative in changing the version)
+//written by Squeeze69
 
 package main
 
@@ -192,25 +192,25 @@ func main() {
 	}
 	err := readprofile(argl[0])
 	if err != nil {
-		log.Fatal("Error!!:", err)
+		log.Fatal("Error:", err)
 	}
 
 	//open the mysql link
 	db, err := sql.Open("mysql", mysqlurl)
 
 	if err != nil {
-		log.Fatal("Error!", err)
+		log.Fatal("Error:", err)
 	}
 	defer db.Close()
 
 	inpf, err := os.Open(argl[1])
 	if err != nil {
-		log.Fatal("dbf file open:", err)
+		log.Fatal("Error: dbf file open:", err)
 	}
 	defer inpf.Close()
 	dbfile, err := dbf.NewReader(inpf)
 	if err != nil {
-		log.Fatal("dbf newreader:", err)
+		log.Fatal("Error: dbf newreader:", err)
 	}
 	dbfile.SetFlags(dbf.FlagDateAssql | dbf.FlagSkipWeird | dbf.FlagSkipDeleted | dbf.FlagEmptyDateAsZero)
 
@@ -220,7 +220,7 @@ func main() {
 			fmt.Println("Dropping table:", argl[2])
 		}
 		if _, erd := db.Exec(fmt.Sprintf("DROP TABLE IF EXISTS `%s`;", argl[2])); erd != nil {
-			log.Fatal("Dropping:", erd)
+			log.Fatal("Error: Dropping:", erd)
 		}
 	}
 
@@ -232,7 +232,7 @@ func main() {
 		ctstring := createtablestring(argl[2], collate, engine, dbfile)
 		if !dumpcreatetable {
 			if _, erc := db.Exec(ctstring); erc != nil {
-				log.Fatal("CREATE TABLE:", erc, "\n", ctstring)
+				log.Fatal("Error: CREATE TABLE:", erc, "\n", ctstring)
 			}
 		}
 		if verbose || dumpcreatetable {
@@ -251,7 +251,7 @@ func main() {
 	if truncate && !droptable {
 		_, err = db.Exec(fmt.Sprintf("TRUNCATE `%s`;", argl[2]))
 		if err != nil {
-			log.Fatal("Error truncating:", err)
+			log.Fatal("Error: truncating:", err)
 		}
 	}
 
@@ -267,7 +267,7 @@ func main() {
 	stmt, err := db.Prepare(qstring)
 
 	if err != nil {
-		log.Fatal("Error! Preparing statement:", err, "\n", qstring)
+		log.Fatal("Error: Preparing statement:", err, "\n", qstring)
 	}
 	defer stmt.Close()
 
@@ -300,7 +300,7 @@ func main() {
 				skipped++
 				continue
 			}
-			log.Fatal("Loop Error: record:", i, " of ", dbfile.Length, " Error:", err)
+			log.Fatal("Error: Loop, record:", i, " of ", dbfile.Length, " Error:", err)
 		}
 	}
 	close(chord)
