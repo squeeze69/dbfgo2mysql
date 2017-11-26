@@ -186,7 +186,8 @@ func main() {
 
 	argl := flag.Args()
 	if len(argl) < 3 {
-		fmt.Println("Usage: dbfgo2mysql [parameters] profile dbffile table")
+		fmt.Println("Usage: dbfgo2mysql [switches] profile dbffile table")
+		fmt.Println("Switches with parameters should be written like: -switch=parameter, i.e.: -g=4")
 		flag.PrintDefaults()
 		os.Exit(1)
 	}
