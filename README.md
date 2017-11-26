@@ -63,6 +63,9 @@ The flags, up to now, are:
 
 -verbose : verbose output
 
+-g : number of goroutines, default is 2 (or max number of cores, if it's lower), max is an hard coded 64.
+-q : number of records in the channel queue, default is 100, minimum is, at least equal to the number of goroutines).
+
 Please, feel free to contact me for bug,suggestions and so on.
 
 Suggested development environment: [Atom](https://atom.io) with the "go-plus" package.
