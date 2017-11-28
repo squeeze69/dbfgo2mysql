@@ -181,7 +181,6 @@ func main() {
 	var insertstatement = "INSERT"
 	var skipped, inserted int
 
-	placeholder := make([]string, 0, 200) //preallocate to reduce memory fragmentation
 	commandLineSet()
 
 	argl := flag.Args()
@@ -246,6 +245,7 @@ func main() {
 
 	//retrieve fields to build the query
 	fields := dbfile.FieldNames()
+	placeholder := make([]string, 0, len(fields)) //preallocate to reduce memory fragmentation
 	for i := 0; i < len(fields); i++ {
 		placeholder = append(placeholder, "?")
 	}
@@ -289,7 +289,6 @@ func main() {
 
 		runtime.Gosched()
 		rec, err := dbfile.ReadOrdered(i)
-
 		if err == nil {
 			if verbose {
 				fmt.Println(rec)
@@ -305,7 +304,7 @@ func main() {
 		}
 	}
 	close(chord)
-	//just to wait for insertRoutine to end
+	//waiting for insertRoutine to end
 	wgroup.Wait()
 	fmt.Printf("Records: Inserted: %d Skipped: %d\nElapsed Time: %s\n",
 		inserted, skipped, time.Now().Sub(start))
