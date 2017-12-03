@@ -166,6 +166,17 @@ func commandLineSet() {
 //insertRoutine goroutine to insert data in dbms
 func insertRoutine(ch chan dbf.OrderedRecord, over *sync.WaitGroup, stmt *sql.Stmt) {
 	defer over.Done()
+	defer func() {
+		//respawn go routine in case of error
+		if r := recover(); r != nil {
+			err, ok := r.(error)
+			if ok {
+				fmt.Println("Recover:", err)
+				over.Add(1)
+				go insertRoutine(ch, over, stmt)
+			}
+		}
+	}()
 	for i := range ch {
 		_, err := stmt.Exec(i...)
 		if err != nil {
