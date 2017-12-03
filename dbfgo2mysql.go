@@ -51,7 +51,13 @@ var collate = defaultCollation
 var engine = defaultEngine
 
 //global variables
-var stmt *sql.Stmt
+//total number of errors on insert (if any), use a lock (shouldn't be too frequent, I hope)
+type insertErrors struct {
+	count int
+	l     sync.Mutex
+}
+
+var ierror insertErrors
 
 //read profile, actually a fixed position file, first row it's a sql url
 func readprofile(prfname string) error {
@@ -172,6 +178,7 @@ func insertRoutine(ch chan dbf.OrderedRecord, over *sync.WaitGroup, stmt *sql.St
 		if r := recover(); r != nil {
 			err, ok := r.(error)
 			if ok {
+				updateInsertError(1)
 				fmt.Println("Recover:", err)
 				over.Add(1)
 				go insertRoutine(ch, over, stmt)
@@ -184,6 +191,14 @@ func insertRoutine(ch chan dbf.OrderedRecord, over *sync.WaitGroup, stmt *sql.St
 			panic(err)
 		}
 	}
+	return
+}
+
+//update insertErrors
+func updateInsertError(i int) {
+	ierror.l.Lock()
+	defer ierror.l.Unlock()
+	ierror.count = ierror.count + i
 	return
 }
 
@@ -323,6 +338,9 @@ func metamain() (int, string, error) {
 		inserted, skipped, time.Now().Sub(start))
 	fmt.Printf("Queue capacity:%d,goroutines:%d\n",
 		recordQueue, numGoroutines)
+	if ierror.count > 0 {
+		fmt.Printf("Insert Errors:%d\n", ierror.count)
+	}
 	return 0, "", nil
 }
 
