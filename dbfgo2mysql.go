@@ -69,12 +69,12 @@ func readprofile(prfname string) error {
 	return nil
 }
 
-//returns a "CREATE TABLE" string
+//returns a "CREATE TABLE" string using templates
 func createtablestring(table string, collate string, engine string, dbr *dbf.Reader) string {
 	var fieldtype string
-	//pre allocate, 200 is an arbitrary value
-	arf := make([]string, 0, 200)
 	fields := dbr.FieldNames()
+	//pre allocate
+	arf := make([]string, 0, len(fields))
 	for k := range fields {
 		dbfld, _ := dbr.FieldInfo(k)
 		switch dbfld.Type {
@@ -110,6 +110,7 @@ func createtablestring(table string, collate string, engine string, dbr *dbf.Rea
 		arf = append(arf, fmt.Sprintf("`%s` %s", dbf.Tillzero(dbfld.Name[:]), fieldtype))
 	}
 
+	//template for table's creation
 	tmpl, err := template.New("table").Parse(
 		`CREATE TABLE IF NOT EXISTS {{.Tablename}} (
 {{range $i,$e := .Arf}}
@@ -167,7 +168,7 @@ func commandLineSet() {
 func insertRoutine(ch chan dbf.OrderedRecord, over *sync.WaitGroup, stmt *sql.Stmt) {
 	defer over.Done()
 	defer func() {
-		//respawn go routine in case of error
+		//respawn go routine in case of error - i.e. bad data are not inserted (i.e. slightly malformed dbf rows)
 		if r := recover(); r != nil {
 			err, ok := r.(error)
 			if ok {
