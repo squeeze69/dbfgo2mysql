@@ -175,7 +175,8 @@ func insertRoutine(ch chan dbf.OrderedRecord, over *sync.WaitGroup, stmt *sql.St
 	return
 }
 
-func main() {
+//workaround for os.Exit non onoring deferred functions
+func metamain() (int, string, error) {
 	var start = time.Now()
 	var qstring string
 	var insertstatement = "INSERT"
@@ -188,29 +189,29 @@ func main() {
 		fmt.Println("Usage: dbfgo2mysql [switches] profile dbffile table")
 		fmt.Println("Switches with parameters should be written like: -switch=parameter, i.e.: -g=4")
 		flag.PrintDefaults()
-		os.Exit(1)
+		return 0, "", nil
 	}
-	err := readprofile(argl[0])
-	if err != nil {
-		log.Fatal("Error:", err)
+
+	if err := readprofile(argl[0]); err != nil {
+		return 1, "Error:", err
 	}
 
 	//open the mysql link
 	db, err := sql.Open("mysql", mysqlurl)
 
 	if err != nil {
-		log.Fatal("Error:", err)
+		return 1, "Error:", err
 	}
 	defer db.Close()
 
 	inpf, err := os.Open(argl[1])
 	if err != nil {
-		log.Fatal("Error: dbf file open:", err)
+		return 1, "Error: dbf file open:", err
 	}
 	defer inpf.Close()
 	dbfile, err := dbf.NewReader(inpf)
 	if err != nil {
-		log.Fatal("Error: dbf newreader:", err)
+		return 1, "Error: dbf newreader:", err
 	}
 	dbfile.SetFlags(dbf.FlagDateAssql | dbf.FlagSkipWeird | dbf.FlagSkipDeleted | dbf.FlagEmptyDateAsZero)
 
@@ -220,7 +221,7 @@ func main() {
 			fmt.Println("Dropping table:", argl[2])
 		}
 		if _, erd := db.Exec(fmt.Sprintf("DROP TABLE IF EXISTS `%s`;", argl[2])); erd != nil {
-			log.Fatal("Error: Dropping:", erd)
+			return 1, "Error: Dropping:", erd
 		}
 	}
 
@@ -232,14 +233,14 @@ func main() {
 		ctstring := createtablestring(argl[2], collate, engine, dbfile)
 		if !dumpcreatetable {
 			if _, erc := db.Exec(ctstring); erc != nil {
-				log.Fatal("Error: CREATE TABLE:", erc, "\n", ctstring)
+				return 1, "Error: CREATE TABLE:", erc
 			}
 		}
 		if verbose || dumpcreatetable {
 			fmt.Println("-- CREATE TABLE:\n", ctstring)
 		}
 		if dumpcreatetable {
-			os.Exit(0)
+			return 0, "", nil
 		}
 	}
 
@@ -252,7 +253,7 @@ func main() {
 	if truncate && !droptable {
 		_, err = db.Exec(fmt.Sprintf("TRUNCATE `%s`;", argl[2]))
 		if err != nil {
-			log.Fatal("Error: truncating:", err)
+			return 1, "Error: truncating:", err
 		}
 	}
 
@@ -268,7 +269,7 @@ func main() {
 	stmt, err := db.Prepare(qstring)
 
 	if err != nil {
-		log.Fatal("Error: Preparing statement:", err, "\n", qstring)
+		return 1, "Error: Preparing statement:", err
 	}
 	defer stmt.Close()
 
@@ -300,7 +301,7 @@ func main() {
 				skipped++
 				continue
 			}
-			log.Fatal("Error: Loop, record:", i, " of ", dbfile.Length, " Error:", err)
+			return 1, fmt.Sprint("Error: Loop, record:", i, " of ", dbfile.Length), err
 		}
 	}
 	close(chord)
@@ -310,4 +311,13 @@ func main() {
 		inserted, skipped, time.Now().Sub(start))
 	fmt.Printf("Queue capacity:%d,goroutines:%d\n",
 		recordQueue, numGoroutines)
+	return 0, "", nil
+}
+
+func main() {
+	ec, msg, err := metamain()
+	if ec != 0 {
+		log.Fatal(msg, err)
+	}
+	os.Exit(ec)
 }
