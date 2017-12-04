@@ -33,7 +33,10 @@ const (
 	minRecordQueue     = 1
 )
 
+//number of records in the queue
 var recordQueue = defaultRecordQueue
+
+//number of goroutines spawned
 var numGoroutines = defaultGoroutines
 
 //global mysqlurl - see the go lang database/sql package
@@ -76,7 +79,7 @@ func readprofile(prfname string) error {
 }
 
 //returns a "CREATE TABLE" string using templates
-func createtablestring(table string, collate string, engine string, dbr *dbf.Reader) string {
+func createTableString(table string, collate string, engine string, dbr *dbf.Reader) string {
 	var fieldtype string
 	fields := dbr.FieldNames()
 	//pre allocate
@@ -257,7 +260,7 @@ func metamain() (int, string, error) {
 		if verbose {
 			fmt.Println("Creating Table: ", argl[2])
 		}
-		ctstring := createtablestring(argl[2], collate, engine, dbfile)
+		ctstring := createTableString(argl[2], collate, engine, dbfile)
 		if !dumpcreatetable {
 			if _, erc := db.Exec(ctstring); erc != nil {
 				return 1, "Error: CREATE TABLE:", erc
