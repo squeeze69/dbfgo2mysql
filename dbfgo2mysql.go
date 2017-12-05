@@ -40,10 +40,10 @@ var recordQueue = defaultRecordQueue
 var numGoroutines = defaultGoroutines
 
 //global mysqlurl - see the go lang database/sql package
-//sample url: "user:passwordd@(127.0.0.1:3306)/database"
+//sample url: "user:password@(127.0.0.1:3306)/database"
 var mysqlurl string
 
-//variuous flags, set by command line, default to false
+//various flags, set by command line, default to false
 var verbose, truncate, createtable, dumpcreatetable, insertignore, nobigint, droptable bool
 
 //max number of record to import, defaults to -1 (means no limit)
@@ -87,7 +87,7 @@ func createTableString(table string, collate string, engine string, dbr *dbf.Rea
 	for k := range fields {
 		dbfld, _ := dbr.FieldInfo(k)
 		switch dbfld.Type {
-		case 'D':
+		case 'D': //Date field
 			fieldtype = "DATE"
 		case 'L': //logical
 			fieldtype = "CHAR(1)"
