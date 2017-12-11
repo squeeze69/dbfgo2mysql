@@ -28,6 +28,7 @@ const (
 	defaultCollation   = "utf8_general_ci"
 	defaultRecordQueue = 100
 	defaultGoroutines  = 2
+	defaultFirstRecord = 0
 	maxGoroutines      = 64
 	minGoroutines      = 1
 	minRecordQueue     = 1
@@ -48,6 +49,9 @@ var verbose, truncate, createtable, dumpcreatetable, insertignore, nobigint, dro
 
 //max number of record to import, defaults to -1 (means no limit)
 var maxrecord int
+
+//first record to fetch
+var firstRecord int
 
 //global variables for --create
 var collate = defaultCollation
@@ -162,6 +166,7 @@ func commandLineSet() {
 	flag.BoolVar(&dumpcreatetable, "dumpcreatetable", false, "Dump the CREATE TABLE string and exit,no other actions.")
 	flag.IntVar(&recordQueue, "q", defaultRecordQueue, "Max record queue")
 	flag.IntVar(&numGoroutines, "g", defaultGoroutines, "Max number of insert threads (keep it low...)")
+	flag.IntVar(&firstRecord, "firstrecord", defaultFirstRecord, "First record to fetch (0 based), default:0")
 	flag.Parse()
 	//enforce limits
 	switch {
@@ -313,8 +318,8 @@ func metamain() (int, string, error) {
 		wgroup.Add(1)
 		go insertRoutine(chord, wgroup, stmt)
 	}
-	for i := 0; i < dbfile.Length; i++ {
-		if maxrecord >= 0 && i >= maxrecord {
+	for i := firstRecord; i < dbfile.Length; i++ {
+		if maxrecord >= 0 && i-firstRecord >= maxrecord {
 			break
 		}
 

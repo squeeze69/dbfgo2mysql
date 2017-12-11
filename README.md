@@ -57,7 +57,9 @@ The flags, up to now, are:
 -insertignore : The "INSERT IGNORE" statement is used instead of "INSERT ", meaning this, if there is duplicate primary key, the error
 	doesn't stop the import.
 
--m=number of records to import, starting from the first.
+-firstrecord=number (0 based), record to start import from
+
+-m=number of records to import, starting from the "firstrecord" record.
 
 -drop drop table before every action (create,truncate, insert).
 
