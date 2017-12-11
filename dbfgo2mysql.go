@@ -53,14 +53,21 @@ var maxrecord int
 var collate = defaultCollation
 var engine = defaultEngine
 
-//global variables
-//total number of errors on insert (if any), use a lock (shouldn't be too frequent, I hope)
-type insertErrors struct {
+//LockableCounter a simple counter with a Mutex
+type LockableCounter struct {
 	count int
 	l     sync.Mutex
 }
 
-var ierror insertErrors
+//Increment lockable counter by i items
+func (lc *LockableCounter) Increment(i int) {
+	lc.l.Lock()
+	defer lc.l.Unlock()
+	lc.count = lc.count + i
+}
+
+//total number on insert errors (if any)
+var ierror LockableCounter
 
 //read profile, actually a fixed position file, first row it's a sql url
 func readprofile(prfname string) error {
@@ -177,11 +184,11 @@ func commandLineSet() {
 func insertRoutine(ch chan dbf.OrderedRecord, over *sync.WaitGroup, stmt *sql.Stmt) {
 	defer over.Done()
 	defer func() {
-		//respawn go routine in case of error - i.e. bad data are not inserted (i.e. slightly malformed dbf rows)
+		//just respawning go routine in case of error - i.e. bad data are not inserted (i.e. slightly malformed dbf rows)
 		if r := recover(); r != nil {
 			err, ok := r.(error)
 			if ok {
-				updateInsertError(1)
+				ierror.Increment(1)
 				fmt.Println("Recover:", err)
 				over.Add(1)
 				go insertRoutine(ch, over, stmt)
@@ -194,14 +201,6 @@ func insertRoutine(ch chan dbf.OrderedRecord, over *sync.WaitGroup, stmt *sql.St
 			panic(err)
 		}
 	}
-	return
-}
-
-//update insertErrors
-func updateInsertError(i int) {
-	ierror.l.Lock()
-	defer ierror.l.Unlock()
-	ierror.count = ierror.count + i
 	return
 }
 
@@ -243,6 +242,7 @@ func metamain() (int, string, error) {
 	if err != nil {
 		return 1, "Error: dbf newreader:", err
 	}
+	//Set the some default flags, skips deleted and "weird" records (see dbf package)
 	dbfile.SetFlags(dbf.FlagDateAssql | dbf.FlagSkipWeird | dbf.FlagSkipDeleted | dbf.FlagEmptyDateAsZero)
 
 	//check if the table must be dropped before creation
@@ -337,6 +337,7 @@ func metamain() (int, string, error) {
 	close(chord)
 	//waiting for insertRoutine to end
 	wgroup.Wait()
+	//printing statistics
 	fmt.Printf("Records: Inserted: %d Skipped: %d\nElapsed Time: %s\n",
 		inserted, skipped, time.Now().Sub(start))
 	fmt.Printf("Queue capacity:%d,goroutines:%d\n",
@@ -350,7 +351,7 @@ func metamain() (int, string, error) {
 func main() {
 	ec, msg, err := metamain()
 	if ec != 0 {
-		log.Fatal(msg, err)
+		log.Println(msg, err)
 	}
 	os.Exit(ec)
 }
