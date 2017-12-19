@@ -42,9 +42,9 @@ Of Course: The user MUST have grants to perform actions.
 The flags, up to now, are:
 
 -truncate : truncate table before writing
-	
+
 -create : create table - actually, some guesswork goes on to build the "create table ..." statement.
-	The "int" types are reduced to their bare minumum for storage (i.e.: 1 digit = TINYINT,etc..)
+    The "int" types are reduced to their bare minumum for storage (i.e.: 1 digit = TINYINT,etc..)
 
 -dumpcreatetable : dumps on stdout the create table code and exit.
 
@@ -55,7 +55,9 @@ The flags, up to now, are:
 -nobigint : DONT'T use BIGINT type, even if there are more than 9 digits
 
 -insertignore : The "INSERT IGNORE" statement is used instead of "INSERT ", meaning this, if there is duplicate primary key, the error
-	doesn't stop the import.
+    doesn't stop the import.
+
+-index=fieldname : Create an index on a specified field.
 
 -firstrecord=number (0 based), record to start import from
 
@@ -70,4 +72,4 @@ The flags, up to now, are:
 
 Please, feel free to contact me for bug,suggestions and so on.
 
-Suggested development environment: [Atom](https://atom.io) with the "go-plus" package.
+Suggested development environment: [Atom](https://atom.io) with the "go-plus" package or [VScode](https://code.visualstudio.com/) with the "GO" extension.

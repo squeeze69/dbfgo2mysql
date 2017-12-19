@@ -47,6 +47,9 @@ var mysqlurl string
 //various flags, set by command line, default to false
 var verbose, truncate, createtable, dumpcreatetable, insertignore, nobigint, droptable bool
 
+//optional index
+var index string
+
 //max number of record to import, defaults to -1 (means no limit)
 var maxrecord int
 
@@ -136,6 +139,8 @@ func createTableString(table string, collate string, engine string, dbr *dbf.Rea
 {{range $i,$e := .Arf}}
 {{- if $i}},
 {{end}}{{$e}}{{end}}
+{{- if .Index}},` +
+			"\nINDEX `ndx` (`{{.Index}}`){{end}}" + `
 ){{if .Collate}} COLLATE='{{.Collate}}'{{end}}{{if .Engine}} ENGINE='{{.Engine}}'{{end}};`)
 	if err != nil {
 		log.Fatal(err)
@@ -143,9 +148,9 @@ func createTableString(table string, collate string, engine string, dbr *dbf.Rea
 	var str string
 	buf := bytes.NewBufferString(str)
 	er1 := tmpl.Execute(buf, struct {
-		Tablename, Collate, Engine string
-		Arf                        []string
-	}{Tablename: "`" + table + "`", Collate: collate, Engine: engine, Arf: arf})
+		Tablename, Collate, Engine, Index string
+		Arf                               []string
+	}{Tablename: "`" + table + "`", Collate: collate, Engine: engine, Arf: arf, Index: index})
 	if er1 != nil {
 		log.Fatal(er1)
 	}
@@ -167,6 +172,7 @@ func commandLineSet() {
 	flag.IntVar(&recordQueue, "q", defaultRecordQueue, "Max record queue")
 	flag.IntVar(&numGoroutines, "g", defaultGoroutines, "Max number of insert threads (keep it low...)")
 	flag.IntVar(&firstRecord, "firstrecord", defaultFirstRecord, "First record to fetch (0 based), default:0")
+	flag.StringVar(&index, "index", "", "if create option is used, add an index to the table")
 	flag.Parse()
 	//enforce limits
 	switch {
