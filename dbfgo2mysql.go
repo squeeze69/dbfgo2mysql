@@ -215,7 +215,7 @@ func insertRoutine(ch chan dbf.OrderedRecord, over *sync.WaitGroup, stmt *sql.St
 	return
 }
 
-//workaround for os.Exit non onoring deferred functions
+//workaround: os.Exit ignores deferred functions
 func metamain() (int, string, error) {
 	var start = time.Now()
 	var qstring string
