@@ -212,7 +212,6 @@ func insertRoutine(ch chan dbf.OrderedRecord, over *sync.WaitGroup, stmt *sql.St
 			panic(err)
 		}
 	}
-	return
 }
 
 //workaround: os.Exit ignores deferred functions
@@ -350,7 +349,7 @@ func metamain() (int, string, error) {
 	wgroup.Wait()
 	//printing statistics
 	fmt.Printf("Records: Inserted: %d Skipped: %d\nElapsed Time: %s\n",
-		inserted, skipped, time.Now().Sub(start))
+		inserted, skipped, time.Since(start))
 	fmt.Printf("Queue capacity:%d,goroutines:%d\n",
 		recordQueue, numGoroutines)
 	if ierror.count > 0 {
