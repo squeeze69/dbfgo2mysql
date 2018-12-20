@@ -1,6 +1,7 @@
 # DBFGO2MYSQL - Squeeze69
 
 ## DBF to MySql program written in [GO](https://golang.org)
+
 [![Build Status](https://travis-ci.org/squeeze69/dbfgo2mysql.svg?branch=master)](https://travis-ci.org/squeeze69/dbfgo2mysql)
 
 ### License: GPLv3
@@ -24,14 +25,15 @@ It's a simple tool to import dbf files into mysql/mariadb tables, optionally cre
 BTW: It's absolutly not as complete as the dbf2mysql written in C, so, if you need more options, please, go and find it.
 Usage:
 
-```
+```bash
 dbfgo2mysql [flags...] profile_file dbffile table
 ```
 
 The profile_file is, actually, a simple text file, the first line is a standard go sql DSN,
 only the first line is used, but it could change in the future.
 i.e.:
-```
+
+```text
 user:password@(127.0.0.1:3307)/database
 ```
 
