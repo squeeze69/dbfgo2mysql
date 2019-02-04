@@ -209,11 +209,9 @@ func insertRoutine(ch chan dbf.OrderedRecord, over *sync.WaitGroup, stmt *sql.St
 				if abortonsqlerror {
 					log.Printf("%s\n", err)
 				} else {
-
 					fmt.Println("Recover:", err)
 					over.Add(1)
 					go insertRoutine(ch, over, stmt)
-
 				}
 			}
 		}

@@ -43,6 +43,8 @@ Of Course: The user MUST have grants to perform actions.
 
 The flags, up to now, are:
 
+-abortonsqlerror : abort insertion whenever an sql error occur, **note**: error 1114 table full is an exception, it always cause an abort.
+
 -truncate : truncate table before writing
 
 -create : create table - actually, some guesswork goes on to build the "create table ..." statement.
