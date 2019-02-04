@@ -46,6 +46,7 @@ var mysqlurl string
 
 //various flags, set by command line, default to false
 var verbose, truncate, createtable, dumpcreatetable, insertignore, nobigint, droptable bool
+var abortonsqlerror = false
 
 //optional index
 var index string
@@ -173,6 +174,7 @@ func commandLineSet() {
 	flag.IntVar(&numGoroutines, "g", defaultGoroutines, "Max number of insert threads (keep it low...)")
 	flag.IntVar(&firstRecord, "firstrecord", defaultFirstRecord, "First record to fetch (0 based), default:0")
 	flag.StringVar(&index, "index", "", "if create option is used, add an index to the table")
+	flag.BoolVar(&abortonsqlerror, "abortonsqlerror", false, "Verbose output")
 	flag.Parse()
 	//enforce limits
 	switch {
@@ -200,9 +202,19 @@ func insertRoutine(ch chan dbf.OrderedRecord, over *sync.WaitGroup, stmt *sql.St
 			err, ok := r.(error)
 			if ok {
 				ierror.Increment(1)
-				fmt.Println("Recover:", err)
-				over.Add(1)
-				go insertRoutine(ch, over, stmt)
+				if strings.Contains(err.Error(), "1114") {
+					//table is full, no way to continue
+					log.Fatal("1114 Table full")
+				}
+				if abortonsqlerror {
+					log.Printf("%s\n", err)
+				} else {
+
+					fmt.Println("Recover:", err)
+					over.Add(1)
+					go insertRoutine(ch, over, stmt)
+
+				}
 			}
 		}
 	}()
