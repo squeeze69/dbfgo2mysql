@@ -6,7 +6,7 @@
 
 **BTW**: Credits to "Squeeze69" would be appreciated if you use this code.
 
-**There is no link between this code and "dbfgo".**
+**There is no relation between this code and "dbfgo".**
 
 **NOTICE**: USE THIS CODE AT YOUR OWN RISK, NO WARRANTIES!
 
