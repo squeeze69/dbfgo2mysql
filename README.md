@@ -2,8 +2,6 @@
 
 ## DBF to MySql program written in [GO](https://golang.org)
 
-[![Build Status](https://travis-ci.org/squeeze69/dbfgo2mysql.svg?branch=master)](https://travis-ci.org/squeeze69/dbfgo2mysql)
-
 ### License: GPLv3
 
 **BTW**: Credits to "Squeeze69" would be appreciated if you use this code.
