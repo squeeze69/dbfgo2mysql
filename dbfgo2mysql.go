@@ -226,6 +226,7 @@ func insertRoutine(ch chan dbf.OrderedRecord, over *sync.WaitGroup, stmt *sql.St
 
 //workaround: os.Exit ignores deferred functions
 func metamain() (int, string, error) {
+
 	var start = time.Now()
 	var qstring string
 	var insertstatement = "INSERT"
@@ -262,7 +263,7 @@ func metamain() (int, string, error) {
 	if err != nil {
 		return 1, "Error: dbf newreader:", err
 	}
-	//Set the some default flags, skips deleted and "weird" records (see dbf package)
+	//Set some default flags, skips deleted and "weird" records (see dbf package)
 	dbfile.SetFlags(dbf.FlagDateAssql | dbf.FlagSkipWeird | dbf.FlagSkipDeleted | dbf.FlagEmptyDateAsZero)
 
 	//check if the table must be dropped before creation
@@ -357,7 +358,7 @@ func metamain() (int, string, error) {
 	close(chord)
 	//waiting for insertRoutine to end
 	wgroup.Wait()
-	//printing statistics
+	//print some stats
 	fmt.Printf("Records: Inserted: %d Skipped: %d\nElapsed Time: %s\n",
 		inserted, skipped, time.Since(start))
 	fmt.Printf("Queue capacity:%d,goroutines:%d\n",
