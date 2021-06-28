@@ -73,6 +73,8 @@ The flags, up to now, are:
 
 -q : number of records in the channel queue, default is 100, minimum is, at least equal to the number of goroutines).
 
+-readinmemory : all of the file is read in memory, it could speed things up over a network, and it's useful for files with a lot of accesses
+
 Please, feel free to contact me for bug,suggestions and so on.
 
 Suggested development environment: [Atom](https://atom.io) with the "go-plus" package or [VScode](https://code.visualstudio.com/) with the "GO" extension.
