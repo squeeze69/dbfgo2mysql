@@ -356,9 +356,11 @@ func metamain() (int, string, error) {
 		wgroup.Add(1)
 		go insertRoutine(chord, wgroup, stmt)
 	}
-	lastrRecord := dbfile.Length
+	var lastrRecord int
 	if maxrecord > 0 && firstRecord+maxrecord < dbfile.Length {
 		lastrRecord = firstRecord + maxrecord
+	} else {
+		lastrRecord = dbfile.Length
 	}
 	for i := firstRecord; i < lastrRecord; i++ {
 		runtime.Gosched()
