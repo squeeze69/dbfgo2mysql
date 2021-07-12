@@ -10,6 +10,7 @@ import (
 	"database/sql"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"runtime"
@@ -56,6 +57,9 @@ var maxrecord int
 
 //first record to fetch
 var firstRecord int
+
+//read all dbf in memory
+var readinmemory = false
 
 //global variables for --create
 var collate = defaultCollation
@@ -175,6 +179,7 @@ func commandLineSet() {
 	flag.IntVar(&firstRecord, "firstrecord", defaultFirstRecord, "First record to fetch (0 based), default:0")
 	flag.StringVar(&index, "index", "", "if create option is used, add an index to the table")
 	flag.BoolVar(&abortonsqlerror, "abortonsqlerror", false, "Verbose output")
+	flag.BoolVar(&readinmemory, "readinmemory", false, "read all the dbf in memory before import")
 	flag.Parse()
 	//enforce limits
 	switch {
@@ -253,15 +258,32 @@ func metamain() (int, string, error) {
 		return 1, "Error:", err
 	}
 	defer db.Close()
+	var allfile []byte
+	var inpf *os.File
+	var dbfile *dbf.Reader
+	// read the whole file in memory
+	if readinmemory {
+		allfile, err = ioutil.ReadFile(argl[1])
+		if err != nil {
+			return 1, "Error: dbf file open:", err
+		}
 
-	inpf, err := os.Open(argl[1])
-	if err != nil {
-		return 1, "Error: dbf file open:", err
-	}
-	defer inpf.Close()
-	dbfile, err := dbf.NewReader(inpf)
-	if err != nil {
-		return 1, "Error: dbf newreader:", err
+		dbfile, err = dbf.NewReader(bytes.NewReader(allfile))
+
+		if err != nil {
+			return 1, "Error: dbf newreader:", err
+		}
+	} else {
+		inpf, err = os.Open(argl[1])
+		if err != nil {
+			return 1, "Error: dbf file open:", err
+		}
+		defer inpf.Close()
+		dbfile, err = dbf.NewReader(inpf)
+
+		if err != nil {
+			return 1, "Error: dbf newreader:", err
+		}
 	}
 	//Set some default flags, skips deleted and "weird" records (see dbf package)
 	dbfile.SetFlags(dbf.FlagDateAssql | dbf.FlagSkipWeird | dbf.FlagSkipDeleted | dbf.FlagEmptyDateAsZero)
@@ -334,11 +356,13 @@ func metamain() (int, string, error) {
 		wgroup.Add(1)
 		go insertRoutine(chord, wgroup, stmt)
 	}
-	for i := firstRecord; i < dbfile.Length; i++ {
-		if maxrecord >= 0 && i-firstRecord >= maxrecord {
-			break
-		}
-
+	var lastrRecord int
+	if maxrecord > 0 && firstRecord+maxrecord < dbfile.Length {
+		lastrRecord = firstRecord + maxrecord
+	} else {
+		lastrRecord = dbfile.Length
+	}
+	for i := firstRecord; i < lastrRecord; i++ {
 		runtime.Gosched()
 		rec, err := dbfile.ReadOrdered(i)
 		if err == nil {
