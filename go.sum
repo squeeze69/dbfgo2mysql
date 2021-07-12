@@ -1,4 +1,4 @@
 github.com/go-sql-driver/mysql v1.6.0 h1:BCTh4TKNUYmOmMUcQ3IipzF5prigylS7XXjEkfCHuOE=
 github.com/go-sql-driver/mysql v1.6.0/go.mod h1:DCzpHaOWr8IXmIStZouvnhqoel9Qv2LBy8hT2VhHyBg=
-github.com/squeeze69/dbf v1.0.0 h1:5x+8vLuWU2i5+CNz2sdCJAloi5XBF6Y8UlAlTIkX0p0=
-github.com/squeeze69/dbf v1.0.0/go.mod h1:+61+TwSfzuOt4IFqyKd2skcVIGx1xDZ+i2JJozr5bX0=
+github.com/squeeze69/dbf v1.0.1 h1:7hrAZ0XTIOPXbhnElGURhf9gg4SWD0WBj8AH6GL7pMM=
+github.com/squeeze69/dbf v1.0.1/go.mod h1:+61+TwSfzuOt4IFqyKd2skcVIGx1xDZ+i2JJozr5bX0=
