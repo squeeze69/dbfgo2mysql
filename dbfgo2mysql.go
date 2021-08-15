@@ -319,10 +319,6 @@ func metamain() (int, string, error) {
 
 	//retrieve fields to build the query
 	fields := dbfile.FieldNames()
-	placeholder := make([]string, 0, len(fields)) //preallocate to reduce memory fragmentation
-	for i := 0; i < len(fields); i++ {
-		placeholder = append(placeholder, "?")
-	}
 	if truncate && !droptable {
 		_, err = db.Exec(fmt.Sprintf("TRUNCATE `%s`;", argl[2]))
 		if err != nil {
@@ -334,7 +330,8 @@ func metamain() (int, string, error) {
 	if insertignore {
 		insertstatement = "INSERT IGNORE"
 	}
-	qstring = fmt.Sprintf("%s INTO %s (`%s`) VALUES (%s);", insertstatement, argl[2], strings.Join(fields, "`,`"), strings.Join(placeholder, ","))
+	qstring = fmt.Sprintf("%s INTO %s (`%s`) VALUES (%s?);",
+		insertstatement, argl[2], strings.Join(fields, "`,`"), strings.Repeat("?,", len(fields)-1))
 	if verbose {
 		fmt.Println("QSTRING:", qstring)
 	}
