@@ -36,10 +36,10 @@ const (
 )
 
 //number of records in the queue
-var recordQueue = defaultRecordQueue
+var recordQueue int
 
 //number of goroutines spawned
-var numGoroutines = defaultGoroutines
+var numGoroutines int
 
 //global mysqlurl - see the go lang database/sql package
 //sample url: "user:password@(127.0.0.1:3306)/database"
@@ -47,7 +47,7 @@ var mysqlurl string
 
 //various flags, set by command line, default to false
 var verbose, truncate, createtable, dumpcreatetable, insertignore, nobigint, droptable bool
-var abortonsqlerror = false
+var abortonsqlerror bool
 
 //optional index
 var index string
