@@ -8,6 +8,7 @@ import (
 	"bufio"
 	"bytes"
 	"database/sql"
+	"errors"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -75,7 +76,7 @@ type LockableCounter struct {
 func (lc *LockableCounter) Increment(i int) {
 	lc.l.Lock()
 	defer lc.l.Unlock()
-	lc.count = lc.count + i
+	lc.count += i
 }
 
 //total number on insert errors (if any)
@@ -83,17 +84,17 @@ var ierror LockableCounter
 
 //read profile, actually a fixed position file, first row it's a sql url
 func readprofile(prfname string) error {
-	s := make([]string, 0, 4)
 	f, err := os.Open(prfname)
 	if err != nil {
 		return err
 	}
 	defer f.Close()
 	scanner := bufio.NewScanner(f)
-	for scanner.Scan() {
-		s = append(s, scanner.Text())
+	if scanner.Scan() {
+		mysqlurl = scanner.Text()
+	} else {
+		return errors.New("no profile found")
 	}
-	mysqlurl = s[0]
 	return nil
 }
 
