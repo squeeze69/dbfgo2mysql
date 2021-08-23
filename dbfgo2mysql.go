@@ -59,11 +59,11 @@ var maxrecord int
 var firstRecord int
 
 //read all dbf in memory
-var readinmemory = false
+var readinmemory bool
 
 //global variables for --create
-var collate = defaultCollation
-var engine = defaultEngine
+var collate string
+var engine string
 
 //LockableCounter a simple counter with a Mutex
 type LockableCounter struct {
@@ -170,8 +170,8 @@ func commandLineSet() {
 	flag.BoolVar(&insertignore, "insertignore", false, "use 'INSERT IGNORE' instead of INSERT")
 	flag.BoolVar(&nobigint, "nobigint", false, "DON'T use BIGINT type, sometimes fields are over-dimensioned")
 	flag.IntVar(&maxrecord, "m", -1, "Maximum number of records to read")
-	flag.StringVar(&collate, "collate", "utf8_general_ci", "Collate to use with CREATE TABLE (if empty, no collate is specified)")
-	flag.StringVar(&engine, "engine", "MyIsam", "Engine to use with CREATE TABLE (if empty, no engine is specified)")
+	flag.StringVar(&collate, "collate", defaultCollation, "Collate to use with CREATE TABLE (if empty, no collate is specified)")
+	flag.StringVar(&engine, "engine", defaultEngine, "Engine to use with CREATE TABLE (if empty, no engine is specified)")
 	flag.BoolVar(&createtable, "create", false, "Switch to CREATE TABLE IF NOT EXISTS")
 	flag.BoolVar(&dumpcreatetable, "dumpcreatetable", false, "Dump the CREATE TABLE string and exit,no other actions.")
 	flag.IntVar(&recordQueue, "q", defaultRecordQueue, "Max record queue")
