@@ -11,7 +11,6 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"runtime"
@@ -264,7 +263,7 @@ func metamain() (int, string, error) {
 	var dbfile *dbf.Reader
 	// read the whole file in memory
 	if readinmemory {
-		allfile, err = ioutil.ReadFile(argl[1])
+		allfile, err = os.ReadFile(argl[1])
 		if err != nil {
 			return 1, "Error: dbf file open:", err
 		}
