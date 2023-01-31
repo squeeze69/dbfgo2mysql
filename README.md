@@ -1,6 +1,6 @@
 # DBFGO2MYSQL - Squeeze69
 
-## DBF to MySql program written in [GO](https://golang.org)
+## DBF to MySql program written in [GO](https://go.dev)
 
 ### License: GPLv3
 
